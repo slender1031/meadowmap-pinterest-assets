@@ -58,10 +58,10 @@ Title,Media URL,Pinterest board,Description,Link,Publish date,Keywords
 - Put all products and Pins for the batch in this single CSV, not one CSV per product.
 - `Media URL` must be the public image URL actually reachable by Pinterest (for example the configured public raw GitHub URL).
 - `Pinterest board` must match the user's chosen existing board name exactly.
-- `Link` is the product's confirmed TPT URL.
+- `Link` must take the reader to the confirmed TPT product page. If multiple Pins in one batch point to the same product page, make each row's `Link` unique with per-Pin UTM parameters (for example `utm_source=pinterest&utm_medium=organic&utm_campaign=<batch-slug>&utm_content=<product-slug>-pin-001`). Preserve the canonical product URL and existing query parameters; append with `&` when the URL already has a query string. Use a stable, distinct Pin ID or image filename for `utm_content`.
 - Leave `Publish date` blank unless the user specifically asks for a date plan.
 - `Keywords` is one CSV cell containing comma-separated keyword phrases. Build it from a list of phrases and join with `, `; do not accidentally split a string into individual characters.
-- Quote/escape CSV cells using a real CSV writer. Check header, row count, empty required fields, and duplicate image URLs before delivering.
+- Quote/escape CSV cells using a real CSV writer. Before delivering, check the exact official header, row count, required fields, duplicate media URLs, and duplicate `Link` values. If multiple Pins share one landing page, resolve duplicate `Link` values with unique per-Pin UTM parameters before export. Pinterest's published formatting guidance does not specify how duplicate destination URLs are handled; treat unique links as a preventive best practice based on observed partial imports, not as a guaranteed platform rule.
 
 Product metadata should include at least `product_name`, `category`, `grade`, `season`, `target_keywords`, and `tpt_url`, plus source file references and any unknown fields as null/empty.
 
@@ -82,6 +82,8 @@ Product Name,Pin ID,Image URL,Pinterest URL,Publish Date,Status
 ```
 
 For prepared but not posted rows, use `Status=Prepared - Not Published`; leave `Pin ID`, `Pinterest URL`, and `Publish Date` blank. Update to a published status only when the user supplies or confirms the actual Pinterest post URL/date/ID. Do not infer success from a CSV upload, elapsed processing time, or a board screenshot showing other Pins.
+
+When a user reports that only part of a CSV import appeared, compare the actual CSV rows with the Pins visible in the user's evidence, matching image URLs/titles where possible. Create a separate retry CSV containing only Pins not already imported or visible; never re-submit confirmed rows in that retry file. Record visible/imported rows in the publish log with the evidence and any missing Pin URL/date clearly stated. If publication state is ambiguous, flag it and ask before retrying rows that could create duplicates. Keep the complete master CSV intact.
 
 Before handing off, report the output folder, total products/Pins, chosen board(s), any missing TPT URLs, hosted-image status, and CSV path. Clearly say the batch is prepared and not published.
 
